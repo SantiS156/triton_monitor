@@ -14,8 +14,8 @@ from triton_telemetry.exceptions import (
     ProviderTimeoutError,
 )
 
-# Nombre de logger propio del operador CLI, separado del logger
-LOGGER_OPERADOR = "app_operator"
+# Nombre del logger utilizado por el operador CLI
+LOGGER_OPERADOR = "application"
 
 
 #  Punto de Entrada CLI
@@ -102,6 +102,9 @@ def configurar_logging(args: argparse.Namespace) -> None:
 
     logging.config.dictConfig(esquema_logging)
 
+    logger = storage.get_logger()
+    logger.addHandler(storage.queue_handler)
+
 
 # Nodo de demostración para NetworkPeeringError
 async def obtener_nodo_offline(cliente: httpx.AsyncClient) -> dict:
@@ -149,10 +152,14 @@ def main() -> None:
     args = construir_parser().parse_args()
     configurar_logging(args)
 
-    logger_operador = logging.getLogger(LOGGER_OPERADOR)
-    logger_operador.info("Iniciando Tritón en modo '%s' sobre %s", args.mode, args.cluster)
+    storage.start_logging()
 
-    storage.start_logging()  # arranca el QueueListener del Integrante 4
+    logger_operador = storage.get_logger()
+    logger_operador.info(
+        "Iniciando Tritón en modo '%s' sobre %s",
+        args.mode,
+        args.cluster
+    )
 
     try:
         resultados = asyncio.run(ejecutar_diagnostico(args))
