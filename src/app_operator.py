@@ -14,11 +14,11 @@ from triton_telemetry.exceptions import (
     ProviderTimeoutError,
 )
 
-# Nombre de logger propio del operador CLI, separado del logger "application"
+# Nombre de logger propio del operador CLI, separado del logger
 LOGGER_OPERADOR = "app_operator"
 
 
-# 1. Punto de Entrada CLI
+#  Punto de Entrada CLI
 def construir_parser() -> argparse.ArgumentParser:
     """Arma el parser de argumentos del operador CLI."""
     parser = argparse.ArgumentParser(
@@ -26,7 +26,7 @@ def construir_parser() -> argparse.ArgumentParser:
         description="Operador CLI del Sistema de Telemetría Multicloud Tritón",
     )
 
-    # Restricción de dominio: solo se aceptan estos 3 modos operativos.
+    # Restricción de dominio
     parser.add_argument(
         "--mode",
         choices=["nominal", "debug", "emergency"],
@@ -64,7 +64,7 @@ def construir_parser() -> argparse.ArgumentParser:
     return parser
 
 
-# 2. Configuración declarativa de logging con dictConfig
+# Configuración declarativa de logging con dictConfig
 def configurar_logging(args: argparse.Namespace) -> None:
     
     if args.quiet:
@@ -103,7 +103,7 @@ def configurar_logging(args: argparse.Namespace) -> None:
     logging.config.dictConfig(esquema_logging)
 
 
-# Nodo de demostración para NetworkPeeringError (DNS / sin conexión).
+# Nodo de demostración para NetworkPeeringError
 async def obtener_nodo_offline(cliente: httpx.AsyncClient) -> dict:
     try:
         respuesta = await cliente.get("https://nodo-inexistente.triton-invalido")
@@ -117,7 +117,7 @@ async def obtener_nodo_offline(cliente: httpx.AsyncClient) -> dict:
         raise error_propio from error_original
 
 
-# Orquestación async: arma las tareas según el modo y las corre en TaskGroup.
+# Orquestación async
 async def ejecutar_diagnostico(args: argparse.Namespace) -> list:
     tareas_objetivo = [
         core.obtener_estado_aws,
@@ -144,7 +144,7 @@ def mostrar_resultados(resultados: list) -> None:
         print(f"  · {resultado['provider']}: OK")
 
 
-# Try principal con captura quirúrgica (except*) + finally
+# Try principal (except*) + finally
 def main() -> None:
     args = construir_parser().parse_args()
     configurar_logging(args)
@@ -180,8 +180,7 @@ def main() -> None:
         mostrar_resultados(resultados)
 
     finally:
-        # PEP 765 / Python 3.14: nunca return, break ni continue acá adentro,
-        # solo apagado ordenado del listener de hilos.
+        # solo apagado ordenado del listener de hilos
         logger_operador.info("Apagando listener de logging en segundo plano")
         storage.stop_logging()
 
