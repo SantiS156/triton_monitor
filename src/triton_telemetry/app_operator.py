@@ -1,18 +1,4 @@
-"""
-app_operator.py
-================
-Punto de entrada CLI oficial del Sistema de Telemetría Multicloud (Proyecto Tritón).
 
-Responsabilidad: Integrante 5 - Coordinador de Integración y Flujo CLI.
-
-Este script asume que se ejecuta desde `src/`, por ejemplo:
-
-    python src/app_operator.py --cluster cluster-aws-east-1 --mode debug
-
-y que el módulo de almacenamiento del Integrante 4 fue movido/renombrado a:
-
-    src/triton_telemetry/storage.py
-"""
 
 import argparse
 import asyncio
@@ -29,13 +15,10 @@ from triton_telemetry.exceptions import (
 )
 
 # Nombre de logger propio del operador CLI, separado del logger "application"
-# que ya gestiona el Integrante 4 (evita que dictConfig pise sus handlers).
 LOGGER_OPERADOR = "app_operator"
 
 
-# ---------------------------------------------------------------------------
-# 1. Punto de Entrada CLI: argparse declarativo con validadores del Integrante 1
-# ---------------------------------------------------------------------------
+# 1. Punto de Entrada CLI
 def construir_parser() -> argparse.ArgumentParser:
     """Arma el parser de argumentos del operador CLI."""
     parser = argparse.ArgumentParser(
@@ -55,7 +38,6 @@ def construir_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    # Validador personalizado del Integrante 1 (sanitizer.py) inyectado como `type`.
     parser.add_argument(
         "--timeout",
         type=sanitizer.validate_timeout,
@@ -71,7 +53,6 @@ def construir_parser() -> argparse.ArgumentParser:
              "ej: cluster-aws-east-1",
     )
 
-    # Grupo opcional excluyente: no se puede pedir salida silenciosa y detallada a la vez.
     grupo_salida = parser.add_mutually_exclusive_group()
     grupo_salida.add_argument(
         "--quiet", action="store_true", help="Salida por consola mínima (solo errores)."
@@ -83,17 +64,9 @@ def construir_parser() -> argparse.ArgumentParser:
     return parser
 
 
-# ---------------------------------------------------------------------------
 # 2. Configuración declarativa de logging con dictConfig
-# ---------------------------------------------------------------------------
 def configurar_logging(args: argparse.Namespace) -> None:
-    """
-    Inyecta el esquema de logging para el logger propio del operador CLI
-    ("app_operator"), de forma declarativa vía dictConfig.
-
-    El logger "application" (archivo rotativo + cola de hilos) queda
-    a cargo del módulo storage.py del Integrante 4 y no se toca acá.
-    """
+    
     if args.quiet:
         nivel_consola = "ERROR"
     elif args.verbose:
@@ -130,11 +103,7 @@ def configurar_logging(args: argparse.Namespace) -> None:
     logging.config.dictConfig(esquema_logging)
 
 
-# ---------------------------------------------------------------------------
 # Nodo de demostración para NetworkPeeringError (DNS / sin conexión).
-# NOTA: idealmente esto vive en core.py (Integrante 2); lo dejo acá marcado
-# para que lo migren cuando el módulo de red esté cerrado.
-# ---------------------------------------------------------------------------
 async def obtener_nodo_offline(cliente: httpx.AsyncClient) -> dict:
     try:
         respuesta = await cliente.get("https://nodo-inexistente.triton-invalido")
@@ -148,10 +117,7 @@ async def obtener_nodo_offline(cliente: httpx.AsyncClient) -> dict:
         raise error_propio from error_original
 
 
-# ---------------------------------------------------------------------------
 # Orquestación async: arma las tareas según el modo y las corre en TaskGroup.
-# No atrapa nada acá: si algo falla, sube como ExceptionGroup hacia main().
-# ---------------------------------------------------------------------------
 async def ejecutar_diagnostico(args: argparse.Namespace) -> list:
     tareas_objetivo = [
         core.obtener_estado_aws,
@@ -178,9 +144,7 @@ def mostrar_resultados(resultados: list) -> None:
         print(f"  · {resultado['provider']}: OK")
 
 
-# ---------------------------------------------------------------------------
-# 3 y 4. Try principal con captura quirúrgica (except*) + finally (PEP 765)
-# ---------------------------------------------------------------------------
+# Try principal con captura quirúrgica (except*) + finally
 def main() -> None:
     args = construir_parser().parse_args()
     configurar_logging(args)
