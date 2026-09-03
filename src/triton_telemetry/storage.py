@@ -5,6 +5,9 @@ import os
 import queue
 import shutil
 
+from.logging_engine import UTCJSONFormatter
+
+
 LOG_FILE = "application.log"
 MAX_BYTES = 2 * 1024 * 1024  # 2 MB
 BACKUP_COUNT = 3
@@ -45,6 +48,7 @@ file_handler = logging.handlers.RotatingFileHandler(
 
 file_handler.namer = gzip_namer
 file_handler.rotator = gzip_rotator
+file_handler.setFormatter(UTCJSONFormatter())
 
 
 # QueueHandler: envía los logs a la cola
