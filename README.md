@@ -115,5 +115,5 @@ httpx>=0.27.0
 - Nombre y apellido: Santiago Ezequiel Sosa
 - Nombre y apellido: Rocio Ayelen Lopez
 - Nombre y apellido: Mendez Mateo Joaquin
-- Nombre y apellido:
-- Nombre y apellido:
+- Nombre y apellido: Alex Cruz Vargas
+- Nombre y apellido: Joel Lamas
